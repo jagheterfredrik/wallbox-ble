@@ -1,0 +1,25 @@
+{
+  "domain": "wallbox_ble",
+  "name": "Wallbox BLE",
+  "bluetooth": [
+    { "local_name": "WB0*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB1*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB2*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB3*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB4*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB5*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB6*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB7*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB8*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" },
+    { "local_name": "WB9*", "service_uuid": "331a36f5-2459-45ea-9d95-6142f0c4b307" }
+  ],
+  "codeowners": [
+    "@jagheterfredrik"
+  ],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://github.com/jagheterfrerdik/wallbox-ble",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/jagheterfrerdik/wallbox-ble/issues",
+  "version": "0.0.0"
+}
