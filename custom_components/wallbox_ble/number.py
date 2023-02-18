@@ -40,7 +40,7 @@ class WallboxBLENumber(WallboxBLEEntity, NumberEntity):
 
     @property
     def available(self):
-        return self.coordinator.max_charge_current != 0
+        return self.coordinator.available
 
     @property
     def native_value(self) -> bool:

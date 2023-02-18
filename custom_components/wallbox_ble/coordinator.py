@@ -34,8 +34,9 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.address = address
         self.locked = False
-        self.charge_current = 6
+        self.charge_current = 0
         self.max_charge_current = 0
+        self.available = False
     
     @classmethod
     async def create(cls, hass, address):
@@ -46,15 +47,20 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         if self.max_charge_current == 0:
-            val = await self.wb.async_get_max_charge_current()
-            if val:
-                self.max_charge_current = val
+            ok, data = await self.wb.async_get_max_charge_current()
+            if ok:
+                self.max_charge_current = data
                 LOGGER.debug(f"SET {self.max_charge_current=}")
-        val = await self.wb.async_get_data()
-        LOGGER.debug("Update done")
-        self.locked = val.get("st", 0) == 6
-        self.charge_current = val.get("cur", 6)
-        return val
+
+        ok, data = await self.wb.async_get_data()
+        if ok:
+            LOGGER.debug("Update done")
+            self.locked = data.get("st", 0) == 6
+            self.charge_current = data.get("cur", 6)
+            self.available = True
+            return data
+        else:
+            self.available = False
 
     async def async_set_locked(self, locked):
         resp = await self.wb.async_set_locked(locked)

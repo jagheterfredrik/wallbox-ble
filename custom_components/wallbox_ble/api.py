@@ -153,7 +153,7 @@ class WallboxBLEApiClient:
     async def request(self, method, parameter=None):
         if not self.client or not self.client.is_connected:
             LOGGER.debug(f"NOT CONNECTED! {self.client}")
-            return {}
+            return False, None
 
         request_id = random.randint(1, 999)
 
@@ -173,23 +173,27 @@ class WallboxBLEApiClient:
         try:
             response = await asyncio.wait_for(self.get_parsed_response(request_id), 2)
             LOGGER.debug("Got response!")
-            return response
+            return True, response
         except asyncio.TimeoutError:
             LOGGER.debug("No response!")
-            return {}
+            return False, None
 
-    async def async_get_data(self) -> any:
+    async def async_get_data(self):
         """Get data from the API."""
-        return await self.request(GET_STATUS)
+        ok, data = await self.request(GET_STATUS)
+        return ok, data
 
-    async def async_set_locked(self, locked: bool) -> any:
+    async def async_set_locked(self, locked):
         """Get data from the API."""
-        return await self.request(LOCK, 1 if locked else 0) == None
+        ok, _ = await self.request(LOCK, int(locked))
+        return ok
 
-    async def async_get_max_charge_current(self) -> any:
+    async def async_get_max_charge_current(self):
         """Get data from the API."""
-        return await self.request(GET_MAX_AVAILABLE_CURRENT)
+        ok, data = await self.request(GET_MAX_AVAILABLE_CURRENT)
+        return ok, data
 
-    async def async_set_charge_current(self, current) -> any:
+    async def async_set_charge_current(self, current):
         """Get data from the API."""
-        return await self.request(SET_MAX_CHARGING_CURRENT, current) == None
+        ok, _ = await self.request(SET_MAX_CHARGING_CURRENT, current)
+        return ok

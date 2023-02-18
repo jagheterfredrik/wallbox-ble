@@ -36,6 +36,10 @@ class WallboxBLELock(WallboxBLEEntity, LockEntity):
         self.entity_description = entity_description
 
     @property
+    def available(self):
+        return self.coordinator.available
+
+    @property
     def is_locked(self) -> bool:
         return self.coordinator.locked
 
