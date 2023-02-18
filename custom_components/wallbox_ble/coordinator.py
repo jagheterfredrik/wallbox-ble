@@ -52,6 +52,7 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_refresh_later(self, delay):
         async def wrap(*_):
             await self.async_refresh()
+
         async_call_later(self.hass, delay, wrap)
 
     async def _async_update_data(self):
