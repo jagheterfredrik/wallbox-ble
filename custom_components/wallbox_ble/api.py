@@ -197,7 +197,11 @@ class WallboxBLEApiClient:
         data = data + bytes([sum(c for c in data) % 256])
 
         self.clear_rx_queue()
-        await self.client.write_gatt_char(rx_char, data, True)
+        try:
+            await self.client.write_gatt_char(rx_char, data, True)
+        except Exception as e:
+            LOGGER.error(f"Failed to write to Bluetooth {e=}")
+            return False, None
 
         try:
             response = await asyncio.wait_for(self.get_parsed_response(request_id), 2)
