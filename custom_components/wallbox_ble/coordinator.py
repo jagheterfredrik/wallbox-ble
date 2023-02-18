@@ -30,7 +30,7 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(seconds=10),
         )
         self.address = address
     
