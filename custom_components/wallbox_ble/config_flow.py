@@ -28,9 +28,7 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfo | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfo] = {}
 
-    async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
-    ) -> FlowResult:
+    async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfo) -> FlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -40,9 +38,7 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_bluetooth_confirm()
 
-    async def async_step_bluetooth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_bluetooth_confirm(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Confirm discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return await self._async_get_or_create_entry()
@@ -79,10 +75,7 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        titles = {
-            address: discovery.name
-            for (address, discovery) in self._discovered_devices.items()
-        }
+        titles = {address: discovery.name for (address, discovery) in self._discovered_devices.items()}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
@@ -90,7 +83,4 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_or_create_entry(self):
         device = async_ble_device_from_address(self.hass, self.unique_id, connectable=True)
-        return self.async_create_entry(
-            title=device.name,
-            data={}
-        )
+        return self.async_create_entry(title=device.name, data={})

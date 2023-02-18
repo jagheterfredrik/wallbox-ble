@@ -27,7 +27,6 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
 
 class WallboxBLELock(WallboxBLEEntity, LockEntity):
-
     def __init__(
         self,
         coordinator: WallboxBLEDataUpdateCoordinator,
@@ -47,11 +46,11 @@ class WallboxBLELock(WallboxBLEEntity, LockEntity):
     async def async_lock(self, **_: any) -> None:
         if await self.coordinator.async_set_parameter(WallboxBLEApiConst.LOCK, 1):
             self.coordinator.locked = True
-            self.async_schedule_update_ha_state() # Locking is slow, so we fake it
+            self.async_schedule_update_ha_state()  # Locking is slow, so we fake it
             await self.coordinator.async_refresh_later(1)
 
     async def async_unlock(self, **_: any) -> None:
         if await self.coordinator.async_set_parameter(WallboxBLEApiConst.LOCK, 0):
             self.coordinator.locked = False
-            self.async_schedule_update_ha_state() # Unlocking is even slower, so we fake it
+            self.async_schedule_update_ha_state()  # Unlocking is even slower, so we fake it
             await self.coordinator.async_refresh_later(1)

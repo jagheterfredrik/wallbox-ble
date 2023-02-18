@@ -10,6 +10,7 @@ from bleak_retry_connector import establish_connection
 
 from .const import LOGGER
 
+
 class WallboxBLEApiConst:
     UART_SERVICE_UUID = "331a36f5-2459-45ea-9d95-6142f0c4b307"
     UART_RX_CHAR_UUID = "a9da6040-0823-4995-94ec-9ce41ca28833"
@@ -94,29 +95,28 @@ class WallboxBLEApiConst:
     UPDATE_SOFTWARE_PROGRESS = "supdp"
     UPDATE_SOFTWARE = "supds"
 
-
-
     STATUS_CODES = [
-        "READY", # 0
-        "CHARGING", # 1
-        "CONNECTED_WAITING_CAR", # 2
-        "CONNECTED_WAITING_SCHEDULE", # 3
-        "PAUSED", # 4
-        "SCHEDULE_END", # 5
-        "LOCKED", # 6
-        "ERROR", # 7
-        "CONNECTED_WAITING_CURRENT_ASSIGNATION", # 8
-        "UNCONFIGURED_POWER_SHARING", # 9
-        "QUEUE_BY_POWER_BOOST", # 10
-        "DISCHARGING", # 11
-        "CONNECTED_WAITING_ADMIN_AUTH_FOR_MID", # 12
-        "CONNECTED_MID_SAFETY_MARGIN_EXCEEDED", # 13
-        "OCPP_UNAVAILABLE", # 14
-        "OCPP_CHARGE_FINISHING", # 15
-        "OCPP_RESERVED", # 16
-        "UPDATING", # 17
-        "QUEUE_BY_ECO_SMART", # 18
+        "READY",  # 0
+        "CHARGING",  # 1
+        "CONNECTED_WAITING_CAR",  # 2
+        "CONNECTED_WAITING_SCHEDULE",  # 3
+        "PAUSED",  # 4
+        "SCHEDULE_END",  # 5
+        "LOCKED",  # 6
+        "ERROR",  # 7
+        "CONNECTED_WAITING_CURRENT_ASSIGNATION",  # 8
+        "UNCONFIGURED_POWER_SHARING",  # 9
+        "QUEUE_BY_POWER_BOOST",  # 10
+        "DISCHARGING",  # 11
+        "CONNECTED_WAITING_ADMIN_AUTH_FOR_MID",  # 12
+        "CONNECTED_MID_SAFETY_MARGIN_EXCEEDED",  # 13
+        "OCPP_UNAVAILABLE",  # 14
+        "OCPP_CHARGE_FINISHING",  # 15
+        "OCPP_RESERVED",  # 16
+        "UPDATING",  # 17
+        "QUEUE_BY_ECO_SMART",  # 18
     ]
+
 
 class WallboxBLEApiClient:
     async def run_ble_client(self, device):
@@ -124,7 +124,7 @@ class WallboxBLEApiClient:
             await self.rx_queue.put(data)
 
         disconnected_event = asyncio.Event()
-        
+
         def disconnected_callback(client):
             LOGGER.debug("Disconnected!")
             disconnected_event.set()
@@ -189,7 +189,7 @@ class WallboxBLEApiClient:
         uart_service = self.client.services.get_service(WallboxBLEApiConst.UART_SERVICE_UUID)
         rx_char = uart_service.get_characteristic(WallboxBLEApiConst.UART_RX_CHAR_UUID)
 
-        payload = { "met": method, "par": parameter, "id": request_id }
+        payload = {"met": method, "par": parameter, "id": request_id}
 
         data = json.dumps(payload, separators=[",", ":"])
         data = bytes(data, "utf8")
