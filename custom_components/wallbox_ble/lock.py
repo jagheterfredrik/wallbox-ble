@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 
+from .api import WallboxBLEApiConst
 from .const import DOMAIN, LOGGER
 from .coordinator import WallboxBLEDataUpdateCoordinator
 from .entity import WallboxBLEEntity
@@ -9,7 +10,7 @@ from .entity import WallboxBLEEntity
 ENTITY_DESCRIPTIONS = (
     LockEntityDescription(
         key="wallbox_ble",
-        name="Charger lock"
+        name="Lock",
     ),
 )
 
@@ -44,9 +45,13 @@ class WallboxBLELock(WallboxBLEEntity, LockEntity):
         return self.coordinator.locked
 
     async def async_lock(self, **_: any) -> None:
-        await self.coordinator.async_set_locked(True)
-        self.async_schedule_update_ha_state()
+        if await self.coordinator.async_set_parameter(WallboxBLEApiConst.LOCK, 1):
+            self.coordinator.locked = True
+            self.async_schedule_update_ha_state() # Locking is slow, so we fake it
+            await self.coordinator.async_refresh_later(1)
 
     async def async_unlock(self, **_: any) -> None:
-        await self.coordinator.async_set_locked(False)
-        self.async_schedule_update_ha_state()
+        if await self.coordinator.async_set_parameter(WallboxBLEApiConst.LOCK, 0):
+            self.coordinator.locked = False
+            self.async_schedule_update_ha_state() # Unlocking is even slower, so we fake it
+            await self.coordinator.async_refresh_later(1)

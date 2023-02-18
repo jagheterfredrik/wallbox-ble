@@ -5,13 +5,14 @@ from datetime import timedelta
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .api import WallboxBLEApiClient
+from .api import WallboxBLEApiClient, WallboxBLEApiConst
 from .const import DOMAIN, LOGGER
 
 
@@ -32,12 +33,15 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
+        self.hass = hass
         self.address = address
         self.locked = False
         self.charge_current = 0
         self.max_charge_current = 0
+        self.status = ""
+        self.status_code = 0
         self.available = False
-    
+
     @classmethod
     async def create(cls, hass, address):
         self = WallboxBLEDataUpdateCoordinator(hass, address)
@@ -45,7 +49,15 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
         self.wb = await WallboxBLEApiClient.create(self.device)
         return self
 
+    async def async_refresh_later(self, delay):
+        async def wrap(*_):
+            await self.async_refresh()
+        async_call_later(self.hass, delay, wrap)
+
     async def _async_update_data(self):
+        if not self.wb.ready:
+            return {}
+
         if self.max_charge_current == 0:
             ok, data = await self.wb.async_get_max_charge_current()
             if ok:
@@ -55,21 +67,15 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
         ok, data = await self.wb.async_get_data()
         if ok:
             LOGGER.debug("Update done")
-            self.locked = data.get("st", 0) == 6
+            self.status_code = data.get("st", 0)
+            self.locked = self.status_code == 6
             self.charge_current = data.get("cur", 6)
+            self.status = WallboxBLEApiConst.STATUS_CODES[self.status_code]
             self.available = True
             return data
         else:
             self.available = False
 
-    async def async_set_locked(self, locked):
-        resp = await self.wb.async_set_locked(locked)
-        if resp:
-            self.locked = locked
-            LOGGER.debug("Lock done")
-
-    async def async_set_charge_current(self, charge_current):
-        resp = await self.wb.async_set_charge_current(int(charge_current))
-        if resp:
-            self.charge_current = charge_current
-            LOGGER.debug("Set current done")
+    async def async_set_parameter(self, parameter, value):
+        ok, _ = await self.wb.request(parameter, value)
+        return ok

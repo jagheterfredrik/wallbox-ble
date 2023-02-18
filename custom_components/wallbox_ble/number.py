@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberEntityDescription
 
+from .api import WallboxBLEApiConst
 from .const import DOMAIN, LOGGER
 from .coordinator import WallboxBLEDataUpdateCoordinator
 from .entity import WallboxBLEEntity
@@ -9,7 +10,10 @@ from .entity import WallboxBLEEntity
 ENTITY_DESCRIPTIONS = (
     NumberEntityDescription(
         key="wallbox_ble",
-        name="Charge current"
+        name="Charge current",
+        native_min_value=6,
+        device_class=NumberDeviceClass.CURRENT,
+        icon="mdi:flash",
     ),
 )
 
@@ -26,9 +30,6 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
 
 class WallboxBLENumber(WallboxBLEEntity, NumberEntity):
-
-    device_class = NumberDeviceClass.CURRENT
-    native_min_value = 6
 
     def __init__(
         self,
@@ -51,5 +52,5 @@ class WallboxBLENumber(WallboxBLEEntity, NumberEntity):
         return self.coordinator.max_charge_current
 
     async def async_set_native_value(self, value: float) -> None:
-        await self.coordinator.async_set_charge_current(value)
-        self.async_schedule_update_ha_state()
+        await self.coordinator.async_set_parameter(WallboxBLEApiConst.SET_MAX_CHARGING_CURRENT, int(value))
+        await self.coordinator.async_refresh()
