@@ -11,6 +11,7 @@ from .coordinator import WallboxBLEDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.LOCK,
+    Platform.NUMBER,
 ]
 
 

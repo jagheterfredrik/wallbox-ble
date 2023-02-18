@@ -185,3 +185,11 @@ class WallboxBLEApiClient:
     async def async_set_locked(self, locked: bool) -> any:
         """Get data from the API."""
         return await self.request(LOCK, 1 if locked else 0) == None
+
+    async def async_get_max_charge_current(self) -> any:
+        """Get data from the API."""
+        return await self.request(GET_MAX_AVAILABLE_CURRENT)
+
+    async def async_set_charge_current(self, current) -> any:
+        """Get data from the API."""
+        return await self.request(SET_MAX_CHARGING_CURRENT, current) == None
