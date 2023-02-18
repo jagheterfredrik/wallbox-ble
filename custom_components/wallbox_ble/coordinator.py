@@ -33,6 +33,7 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=10),
         )
         self.address = address
+        self.locked = False
     
     @classmethod
     async def create(cls, hass, address):
@@ -42,21 +43,13 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
         return self
 
     async def _async_update_data(self):
-        """Update data via library."""
-        # LOGGER.debug("Update requested")
-        # device = async_ble_device_from_address(self.hass, self.address, connectable=True)
-        # LOGGER.debug("Got device")
-        # wb = WallboxBLEApiClient(device)
         val = await self.wb.async_get_data()
         LOGGER.debug("Update done")
+        self.locked = val.get("st", 0) == 6
         return val
 
     async def async_set_locked(self, locked):
-        """Update data via library."""
-        # LOGGER.debug("Lock requested")
-        # device = async_ble_device_from_address(self.hass, self.address, connectable=True)
-        # LOGGER.debug("Got device")
-        # wb = WallboxBLEApiClient(device)
-        await self.wb.async_set_locked(locked)
-        self.data = int(locked)
-        LOGGER.debug("Lock done")
+        resp = await self.wb.async_set_locked(locked)
+        if resp:
+            self.locked = locked
+            LOGGER.debug("Lock done")

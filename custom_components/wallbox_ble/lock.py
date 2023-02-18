@@ -37,7 +37,7 @@ class WallboxBLELock(WallboxBLEEntity, LockEntity):
 
     @property
     def is_locked(self) -> bool:
-        return self.coordinator.data == 1
+        return self.coordinator.locked
 
     async def async_lock(self, **_: any) -> None:
         await self.coordinator.async_set_locked(True)

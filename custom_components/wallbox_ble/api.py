@@ -139,6 +139,7 @@ class WallboxBLEApiClient:
             try:
                 data += await self.rx_queue.get()
                 parsed_data = json.loads(data)
+                LOGGER.debug(f"Got {parsed_data=}")
                 if parsed_data["id"] == request_id:
                     return parsed_data.get("r")
                 else:
@@ -152,7 +153,7 @@ class WallboxBLEApiClient:
     async def request(self, method, parameter=None):
         if not self.client or not self.client.is_connected:
             LOGGER.debug(f"NOT CONNECTED! {self.client}")
-            return None
+            return {}
 
         request_id = random.randint(1, 999)
 
@@ -175,12 +176,12 @@ class WallboxBLEApiClient:
             return response
         except asyncio.TimeoutError:
             LOGGER.debug("No response!")
-            return None
+            return {}
 
     async def async_get_data(self) -> any:
         """Get data from the API."""
-        return await self.request(GET_LOCK_STATUS)
+        return await self.request(GET_STATUS)
 
     async def async_set_locked(self, locked: bool) -> any:
         """Get data from the API."""
-        return await self.request(LOCK, 1 if locked else 0) == 0
+        return await self.request(LOCK, 1 if locked else 0) == None
