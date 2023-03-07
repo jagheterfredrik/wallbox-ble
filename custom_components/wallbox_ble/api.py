@@ -135,6 +135,7 @@ class WallboxBLEApiClient:
             try:
                 async with BleakClient(device, disconnected_callback=disconnected_callback) as self.client:
                     LOGGER.debug(f"Connected!")
+                    await self.client.pair()
                     await self.client.start_notify(WallboxBLEApiConst.UART_TX_CHAR_UUID, callback_handler)
                     await disconnected_event.wait()
             except Exception as e:
