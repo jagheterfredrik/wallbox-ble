@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later
@@ -24,7 +23,6 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        address: str,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -34,7 +32,6 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=10),
         )
         self.hass = hass
-        self.address = address
         self.locked = False
         self.charge_current = 0
         self.max_charge_current = 0
@@ -44,9 +41,8 @@ class WallboxBLEDataUpdateCoordinator(DataUpdateCoordinator):
 
     @classmethod
     async def create(cls, hass, address):
-        self = WallboxBLEDataUpdateCoordinator(hass, address)
-        self.device = async_ble_device_from_address(self.hass, self.address, connectable=True)
-        self.wb = await WallboxBLEApiClient.create(self.device)
+        self = WallboxBLEDataUpdateCoordinator(hass)
+        self.wb = await WallboxBLEApiClient.create(hass, address)
         return self
 
     async def async_refresh_later(self, delay):

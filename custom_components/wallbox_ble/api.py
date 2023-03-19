@@ -5,8 +5,18 @@ import random
 import asyncio
 import json
 import contextlib
+
 from bleak import BleakClient
 from bleak_retry_connector import establish_connection
+from bleak.exc import BleakDBusError
+
+from dbus_fast.aio import MessageBus
+from dbus_fast.auth import AuthExternal
+from dbus_fast.constants import BusType
+from dbus_fast.message import Message
+from dbus_fast.service import ServiceInterface, method
+
+from homeassistant.components.bluetooth import async_ble_device_from_address
 
 from .const import LOGGER
 
@@ -118,8 +128,35 @@ class WallboxBLEApiConst:
     ]
 
 
+class AgentInterface(ServiceInterface):
+    def __init__(self, name):
+        super().__init__(name)
+
+    @method()
+    def RequestAuthorization(self, device: 'o'):
+        LOGGER.debug(f"Initial pairing! Got RequestAuthorization for {device}")
+        return
+
+
 class WallboxBLEApiClient:
-    async def run_ble_client(self, device):
+
+    async def pair_client(self):
+        bus = await MessageBus(bus_type=BusType.SYSTEM, negotiate_unix_fd=True).connect()
+
+        interface = AgentInterface('org.bluez.Agent1')
+        bus.export('/wallbox/agent', interface)
+
+        introspection = await bus.introspect('org.bluez', '/org/bluez')
+        obj = bus.get_proxy_object('org.bluez', '/org/bluez', introspection)
+        agent_manager = obj.get_interface('org.bluez.AgentManager1')
+
+        await agent_manager.call_register_agent("/wallbox/agent", "NoInputNoOutput")
+
+        await self.client.pair()
+
+        bus.disconnect()
+
+    async def run_ble_client(self):
         async def callback_handler(sender, data):
             await self.rx_queue.put(data)
 
@@ -133,9 +170,16 @@ class WallboxBLEApiClient:
             LOGGER.debug("Connecting...")
 
             try:
+                device = async_ble_device_from_address(self.hass, self.address, connectable=True)
+                if not device:
+                    raise Exception("No device found")
                 async with BleakClient(device, disconnected_callback=disconnected_callback) as self.client:
-                    LOGGER.debug(f"Connected!")
-                    await self.client.pair()
+                    LOGGER.debug("Connected!")
+                    try:
+                        await self.client.pair()
+                    except NotImplementedError:
+                        # Ugly hack until we wait for HA pairing support to land
+                        await self.client._backend._client.bluetooth_device_pair(self.client._backend._address_as_int)
                     await self.client.start_notify(WallboxBLEApiConst.UART_TX_CHAR_UUID, callback_handler)
                     await disconnected_event.wait()
             except Exception as e:
@@ -152,11 +196,13 @@ class WallboxBLEApiClient:
             asyncio.sleep(0.1)
 
     @classmethod
-    async def create(cls, device):
+    async def create(cls, hass, address):
         self = WallboxBLEApiClient()
         self.client = None
         self.rx_queue = asyncio.Queue()
-        self.client_task = asyncio.create_task(self.run_ble_client(device))
+        self.hass = hass
+        self.address = address
+        self.client_task = asyncio.create_task(self.run_ble_client())
         return self
 
     async def get_parsed_response(self, request_id):
@@ -199,7 +245,7 @@ class WallboxBLEApiClient:
 
         self.clear_rx_queue()
         try:
-            await self.client.write_gatt_char(rx_char, data, True)
+            await asyncio.wait_for(self.client.write_gatt_char(rx_char, data, True), 2)
         except Exception as e:
             LOGGER.error(f"Failed to write to Bluetooth {e=}")
             return False, None
